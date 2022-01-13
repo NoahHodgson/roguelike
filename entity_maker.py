@@ -10,7 +10,7 @@ player = Actor(
     name="Player",
     ai_cls=HostileEnemy,
     fighter=Fighter(hp=30, defense=2, power=5),
-    inventory=Inventory(capacity=26),
+    inventory=Inventory(capacity=10),
 )
 
 orc = Actor(

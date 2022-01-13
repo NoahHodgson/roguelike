@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Iterator, Optional, TYPE_CHECKING
+from typing import Iterable, Iterator, List, Optional, TYPE_CHECKING
 import numpy as np
 from numpy.core.multiarray import array  # type: ignore
 from tcod.console import Console
@@ -112,7 +112,10 @@ class GameWorld:
         room_max_size: int,
         max_monsters_per_room: int,
         max_items_per_room: int,
-        current_floor: int = 0
+        current_floor_x: int = 0,
+        current_floor_y: int = 0,
+        current_floor_z: int = 0,
+        world_map: dict = {}
     ):
         self.engine = engine
 
@@ -127,26 +130,50 @@ class GameWorld:
         self.max_monsters_per_room = max_monsters_per_room
         self.max_items_per_room = max_items_per_room
 
-        self.current_floor = current_floor
+        self.current_floor_x = current_floor_x
+        self.current_floor_y = current_floor_y
+        self.current_floor_z = current_floor_z
+        self.world_map = world_map
 
     def generate_floor(self, dir: str) -> None:
         from procgen import generate_dungeon
 
         if dir == "up":
-            self.current_floor -= 1
-        elif dir == "mid":
-            pass
+            self.current_floor_z -= 1
+        elif dir == "north":
+            self.current_floor_y += 1
+        elif dir == "south":
+            self.current_floor_y -= 1
+        elif dir == "east":
+            self.current_floor_x += 1
+        elif dir == "west":
+            self.current_floor_x -= 1
         elif dir == "down":
-            self.current_floor += 1
+            self.current_floor_z += 1
 
-        self.engine.game_map = generate_dungeon(
-            max_rooms=self.max_rooms,
-            room_min_size=self.room_min_size,
-            room_max_size=self.room_max_size,
-            map_width=self.map_width,
-            map_height=self.map_height,
-            max_monsters_per_room=self.max_monsters_per_room,
-            max_items_per_room=self.max_items_per_room,
-            engine=self.engine,
-            direction=dir
-        )
+        #check if it exists, load, else generate new floor and append 
+        print("this is floor "+str(self.current_floor_x)+" "+str(self.current_floor_y)+ " "+str(self.current_floor_z))
+
+        if (self.current_floor_x, self.current_floor_y,self.current_floor_z) in self.world_map:
+            self.engine.game_map=self.world_map[(self.current_floor_x, self.current_floor_y,self.current_floor_z)]
+            if dir == "up":
+                new_x = self.engine.game_map.downstairs_location[0]
+                new_y = self.engine.game_map.downstairs_location[1]
+                self.engine.player.place(new_x, new_y,self.engine.game_map)
+            elif dir == "down":
+                new_x = self.engine.game_map.upstairs_location[0]
+                new_y = self.engine.game_map.upstairs_location[1]
+                self.engine.player.place(new_x, new_y,self.engine.game_map)
+        else:
+            self.engine.game_map = generate_dungeon(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                max_monsters_per_room=self.max_monsters_per_room,
+                max_items_per_room=self.max_items_per_room,
+                engine=self.engine,
+                direction=dir
+            )
+            self.world_map[(self.current_floor_x, self.current_floor_y,self.current_floor_z)] = self.engine.game_map

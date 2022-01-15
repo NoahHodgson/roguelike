@@ -62,3 +62,10 @@ up_stairs = new_tile(
     dark=(ord("<"), (0, 0, 100), (50, 50, 150)),
     light=(ord("<"), (255, 255, 255), (200, 180, 50)),
 )
+
+next_map = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("^"), (0, 0, 100), (50, 50, 150)),
+    light=(ord("^"), (255, 255, 255), (200, 180, 50)),
+)

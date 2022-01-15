@@ -60,8 +60,12 @@ def place_entities(
             item_chance = random.random()
             if item_chance < 0.7:
                 entity_maker.health_potion.spawn(dungeon, x, y)
+            elif item_chance < 0.75:
+                entity_maker.dagger.spawn(dungeon, x, y)
             elif item_chance < 0.8:
                 entity_maker.fireball_scroll.spawn(dungeon, x, y)
+            elif item_chance < 0.85:
+                entity_maker.leather_armor.spawn(dungeon, x, y)
             elif item_chance < 0.9:
                 entity_maker.confusion_scroll.spawn(dungeon, x, y)
             else:

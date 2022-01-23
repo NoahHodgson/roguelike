@@ -20,8 +20,24 @@ def get_names_at_location(x: int, y: int, game_map: GameMap) -> str:
 
     return names.capitalize()
 
-def render_bar(
+def render_hp_bar(
     console: Console, current_value: int, maximum_value: int, total_width: int
+) -> None:
+    bar_width = int(float(current_value) / maximum_value * total_width)
+
+    console.draw_rect(x=0, y=44, width=20, height=1, ch=1, bg=color.bar_empty)
+
+    if bar_width > 0:
+        console.draw_rect(
+            x=0, y=44, width=bar_width, height=1, ch=1, bg=color.red
+        )
+
+    console.print(
+        x=1, y=44, string=f"HP: {current_value}/{maximum_value}", fg=color.bar_text
+    )
+    
+def render_stam_bar(
+        console: Console, current_value: int, maximum_value: int, total_width: int
 ) -> None:
     bar_width = int(float(current_value) / maximum_value * total_width)
 
@@ -29,11 +45,11 @@ def render_bar(
 
     if bar_width > 0:
         console.draw_rect(
-            x=0, y=45, width=bar_width, height=1, ch=1, bg=color.bar_filled
+            x=0, y=45, width=bar_width, height=1, ch=1, bg=color.green
         )
 
     console.print(
-        x=1, y=45, string=f"HP: {current_value}/{maximum_value}", fg=color.bar_text
+        x=1, y=45, string=f"Stamina: {current_value}/{maximum_value}", fg=color.bar_text
     )
 
 def render_dungeon_level(

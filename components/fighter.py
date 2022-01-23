@@ -11,21 +11,31 @@ if TYPE_CHECKING:
 class Fighter(BaseComponent):
     parent: Actor
     
-    def __init__(self, hp: int, base_defense: int, base_power: int):        
+    def __init__(self, hp: int, stam:int, base_defense: int, base_power: int):        
         self.max_hp = hp
         self._hp = hp
+        self.max_stam = stam
+        self._stam = stam
         self.base_defense = base_defense
         self.base_power = base_power
 
     @property
     def hp(self) -> int:    
         return self._hp
+    
+    @property
+    def stam(self) -> int:    
+        return self._stam
 
     @hp.setter
     def hp(self, value: int) -> None:
         self._hp = max(0, min(value, self.max_hp))
         if self._hp == 0 and self.parent.ai:
             self.die()
+
+    @stam.setter
+    def stam(self, value: int) -> None:
+        self._stam = max(0, min(value, self.max_stam))
 
     def die(self) -> None:
         if self.engine.player is self.parent:
@@ -61,7 +71,25 @@ class Fighter(BaseComponent):
 
     def take_damage(self, amount: int) -> None:
         self.hp -= amount
+
+    def restore_stam(self, amount: int):
+        if self.stam == self.max_stam:
+            return
+        
+        new_stam_value = self.stam+amount
+        print(str(new_stam_value))
+        if new_stam_value > self.max_stam:
+            new_stam_value = self.max_stam
+        
+        self.stam = new_stam_value
+        return
+        
+          
+    def take_stam(self, amount: int):
+        self.stam = max(self.stam - amount, 0)
+
     
+
     @property
     def defense(self) -> int:
         return self.base_defense + self.defense_bonus

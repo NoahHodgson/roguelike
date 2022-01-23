@@ -86,6 +86,7 @@ class EquipAction(Action):
 
 class WaitAction(Action):
     def perform(self) -> None:
+        self.entity.fighter.restore_stam(1)
         pass
 
 class TakeStairsAction(Action):
@@ -147,23 +148,34 @@ class MeleeAction(ActionWithDirection):
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
-            
-        damage = self.entity.fighter.power - target.fighter.defense
 
-        attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
-        if self.entity is self.engine.player:
-            attack_color = color.player_atk
-        else:
-            attack_color = color.enemy_atk
-        if damage > 0:
+        if self.entity.fighter.stam <= 2:
             self.engine.message_log.add_message(
-                f"{attack_desc} for {damage} hit points.", attack_color
+                self.entity.name.capitalize() + " swing, exhausted, missing the target", color.white
             )
-            target.fighter.hp -= damage
-        else:
-            self.engine.message_log.add_message(
-                f"{attack_desc} but does no damage.", attack_color
-            )
+            print(str(self.entity.fighter.stam))
+            self.entity.fighter.restore_stam(1)
+            print(str(self.entity.fighter.stam))
+
+        else:            
+            damage = self.entity.fighter.power - target.fighter.defense
+
+            self.entity.fighter.take_stam(3)
+
+            attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
+            if self.entity is self.engine.player:
+                attack_color = color.player_atk
+            else:
+                attack_color = color.enemy_atk
+            if damage > 0:
+                self.engine.message_log.add_message(
+                    f"{attack_desc} for {damage} hit points.", attack_color
+                )
+                target.fighter.hp -= damage
+            else:
+                self.engine.message_log.add_message(
+                    f"{attack_desc} but does no damage.", attack_color
+                )
 
 class MovementAction(ActionWithDirection):
 
@@ -180,6 +192,8 @@ class MovementAction(ActionWithDirection):
             # Destination is blocked by an entity.
             raise exceptions.Impossible("That way is blocked.")
         self.entity.move(self.dx, self.dy)
+        self.entity.fighter.restore_stam(1)
+
 
 class BumpAction(ActionWithDirection):
     def perform(self) -> None:

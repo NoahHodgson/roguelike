@@ -118,6 +118,7 @@ class ActionWithDirection(Action):
         super().__init__(entity)
         self.dx = dx
         self.dy = dy
+        print(str(dx)+", "+str(dy))
 
     @property
     def dest_xy(self) -> Tuple[int, int]:
@@ -149,18 +150,48 @@ class MeleeAction(ActionWithDirection):
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
 
-        if self.entity.fighter.stam <= 2:
+        if self.entity.fighter.stam < self.entity.fighter.stam_cost:
             self.engine.message_log.add_message(
-                self.entity.name.capitalize() + " swing, exhausted, missing the target", color.white
+                self.entity.name.capitalize() + " swings, exhausted, missing the target", color.white
             )
-            print(str(self.entity.fighter.stam))
             self.entity.fighter.restore_stam(1)
-            print(str(self.entity.fighter.stam))
 
         else:            
             damage = self.entity.fighter.power - target.fighter.defense
 
-            self.entity.fighter.take_stam(3)
+            self.entity.fighter.take_stam_atk()
+
+            attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
+            if self.entity is self.engine.player:
+                attack_color = color.player_atk
+            else:
+                attack_color = color.enemy_atk
+            if damage > 0:
+                self.engine.message_log.add_message(
+                    f"{attack_desc} for {damage} hit points.", attack_color
+                )
+                target.fighter.hp -= damage
+            else:
+                self.engine.message_log.add_message(
+                    f"{attack_desc} but does no damage.", attack_color
+                )
+
+class MeleeActionHeavy(ActionWithDirection):
+    def perform(self) -> None:
+        target = self.target_actor
+        if not target:
+            raise exceptions.Impossible("Nothing to attack.")
+
+        if self.entity.fighter.stam < round(self.entity.fighter.stam_cost * 1.6):
+            self.engine.message_log.add_message(
+                self.entity.name.capitalize() + " swings, exhausted, missing the target", color.white
+            )
+            self.entity.fighter.restore_stam(1)
+
+        else:            
+            damage = round(self.entity.fighter.power*1.6) - target.fighter.defense
+
+            self.entity.fighter.take_stam(round(self.entity.fighter.stam_cost*1.5))
 
             attack_desc = f"{self.entity.name.capitalize()} attacks {target.name}"
             if self.entity is self.engine.player:

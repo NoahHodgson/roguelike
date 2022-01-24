@@ -11,13 +11,14 @@ if TYPE_CHECKING:
 class Fighter(BaseComponent):
     parent: Actor
     
-    def __init__(self, hp: int, stam:int, base_defense: int, base_power: int):        
+    def __init__(self, hp: int, stam:int, base_defense: int, base_power: int, base_cost):        
         self.max_hp = hp
         self._hp = hp
         self.max_stam = stam
         self._stam = stam
         self.base_defense = base_defense
         self.base_power = base_power
+        self.stam_cost = base_cost
 
     @property
     def hp(self) -> int:    
@@ -88,7 +89,8 @@ class Fighter(BaseComponent):
     def take_stam(self, amount: int):
         self.stam = max(self.stam - amount, 0)
 
-    
+    def take_stam_atk(self):
+        self.stam = max(self.stam - self.stam_cost, 0)    
 
     @property
     def defense(self) -> int:

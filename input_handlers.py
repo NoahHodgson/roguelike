@@ -7,7 +7,10 @@ import tcod.event
 import actions
 from actions import (
     Action,
+    ActionWithDirection,
     BumpAction,
+    MeleeAction,
+    MeleeActionHeavy,
     WaitAction,
     PickupAction,
 )
@@ -400,6 +403,25 @@ class InventoryDropHandler(InventoryEventHandler):
         """Drop this item."""
         return actions.DropItem(self.engine.player, item)
 
+class SelectAdjacentHandler(EventHandler):
+    def __init__(self, engine: Engine):
+        """Sets the cursor to the player when this handler is constructed."""
+        super().__init__(engine)
+        player = self.engine.player
+        engine.mouse_location = player.x, player.y
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        x, y = self.engine.mouse_location
+        key = event.sym
+        if key in MOVE_KEYS:
+            x, y = 0, 0
+            dx, dy = MOVE_KEYS[key]
+            x += dx
+            y += dy
+            self.engine.mouse_location = x, y
+            return self.on_index_selected(*self.engine.mouse_location)
+        return super().ev_keydown(event)
+
 
 class SelectIndexHandler(AskUserEventHandler):
     """Handles asking the user for an index on the map."""
@@ -463,6 +485,17 @@ class LookHandler(SelectIndexHandler):
         """Return to main handler."""
         return MainGameEventHandler(self.engine)
 
+
+class SingleMeleeAttackHandler(SelectAdjacentHandler):
+    def __init__(
+        self, engine: Engine, callback: Callable[[Tuple[int, int]], Optional[Action]]
+    ):
+        super().__init__(engine)
+
+        self.callback = callback
+
+    def on_index_selected(self, x: int, y: int) -> Optional[Action]:
+        return self.callback((x, y))
 
 class SingleRangedAttackHandler(SelectIndexHandler):
     """Handles targeting a single enemy. Only the enemy selected will be affected."""
@@ -556,7 +589,11 @@ class MainGameEventHandler(EventHandler):
         elif key == tcod.event.K_SLASH:
             return InventoryDropHandler(self.engine)
         elif key == tcod.event.K_c:
-            return CharacterScreenEventHandler(self.engine)
+             CharacterScreenEventHandler(self.engine)
+        elif key == tcod.event.K_a:
+            return SingleMeleeAttackHandler(self.engine,lambda xy:actions.MeleeAction(player, xy[0], xy[1]))
+        elif key == tcod.event.K_h:
+            return SingleMeleeAttackHandler(self.engine,lambda xy:actions.MeleeActionHeavy(player, xy[0], xy[1]))
         return action
 
 class GameOverEventHandler(EventHandler):

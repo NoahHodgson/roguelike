@@ -497,6 +497,17 @@ class SingleMeleeAttackHandler(SelectAdjacentHandler):
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
         return self.callback((x, y))
 
+class DodgeHandler(SelectAdjacentHandler):
+    def __init__(
+        self, engine: Engine, callback: Callable[[Tuple[int, int]], Optional[Action]]
+    ):
+        super().__init__(engine)
+
+        self.callback = callback
+
+    def on_index_selected(self, x: int, y: int) -> Optional[Action]:
+        return self.callback((x, y))
+
 class SingleRangedAttackHandler(SelectIndexHandler):
     """Handles targeting a single enemy. Only the enemy selected will be affected."""
 
@@ -556,6 +567,7 @@ class MainGameEventHandler(EventHandler):
         modifier = event.mod
 
         player = self.engine.player
+        player.fighter.is_invul = False
 
         if key == tcod.event.K_PERIOD and modifier & (
             tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT
@@ -594,6 +606,8 @@ class MainGameEventHandler(EventHandler):
             return SingleMeleeAttackHandler(self.engine,lambda xy:actions.MeleeAction(player, xy[0], xy[1]))
         elif key == tcod.event.K_h:
             return SingleMeleeAttackHandler(self.engine,lambda xy:actions.MeleeActionHeavy(player, xy[0], xy[1]))
+        elif key == tcod.event.K_x:
+            return DodgeHandler(self.engine,lambda xy:actions.DodgeAction(player, xy[0], xy[1]))
         return action
 
 class GameOverEventHandler(EventHandler):

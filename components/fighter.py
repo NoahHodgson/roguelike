@@ -19,6 +19,9 @@ class Fighter(BaseComponent):
         self.base_defense = base_defense
         self.base_power = base_power
         self.stam_cost = base_cost
+        self.is_invul = False
+        self.is_blocking = False
+        self.is_two_hand = False
 
     @property
     def hp(self) -> int:    

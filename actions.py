@@ -73,7 +73,13 @@ class ItemAction(Action):
     def perform(self) -> None:
         """Invoke the items ability, this action will be given to provide context."""
         if self.item.consumable:
-            self.item.consumable.activate(self)
+            if self.target_actor != None:
+                if not self.target_actor.fighter.is_invul:
+                    self.item.consumable.activate(self)
+                else:
+                    self.engine.message_log.add_message(
+                        self.target_actor().name.capitalize() + " dodges the attack", color.white
+                )
 
 class EquipAction(Action):
     def __init__(self, entity: Actor, item: Item):
@@ -112,6 +118,14 @@ class DropItem(ItemAction):
         if self.entity.equipment.item_is_equipped(self.item):
             self.entity.equipment.toggle_equip(self.item)
         self.entity.inventory.drop(self.item)
+
+class ToggleTwoHand(Action):
+    def perform(self) -> None:
+        self.entity.fighter.is_two_hand = not self.entity.fighter.is_two_hand
+
+class ToggleBlock(Action):
+    def perform(self) -> None:
+        self.entity.fighter.is_blocking = not self.entity.fighter.is_blocking
 
 class ActionWithDirection(Action):
     def __init__(self, entity: Actor, dx: int, dy: int):
@@ -156,6 +170,12 @@ class MeleeAction(ActionWithDirection):
             )
             self.entity.fighter.restore_stam(1)
 
+        elif target.fighter.is_invul:
+            self.entity.fighter.take_stam_atk()
+            self.engine.message_log.add_message(
+                target.name.capitalize() + " dodges the attack!", color.white
+            )
+
         else:            
             damage = self.entity.fighter.power - target.fighter.defense
 
@@ -176,6 +196,7 @@ class MeleeAction(ActionWithDirection):
                     f"{attack_desc} but does no damage.", attack_color
                 )
 
+
 class MeleeActionHeavy(ActionWithDirection):
     def perform(self) -> None:
         target = self.target_actor
@@ -187,6 +208,12 @@ class MeleeActionHeavy(ActionWithDirection):
                 self.entity.name.capitalize() + " swings, exhausted, missing the target", color.white
             )
             self.entity.fighter.restore_stam(1)
+        
+        elif target.fighter.is_invul:
+            self.entity.fighter.take_stam_atk()
+            self.engine.message_log.add_message(
+                target.name.capitalize() + " dodges the attack!", color.white
+            )
 
         else:            
             damage = round(self.entity.fighter.power*1.6) - target.fighter.defense
@@ -208,8 +235,41 @@ class MeleeActionHeavy(ActionWithDirection):
                     f"{attack_desc} but does no damage.", attack_color
                 )
 
-class MovementAction(ActionWithDirection):
+class DodgeAction(ActionWithDirection):
+    def perform(self) -> None:
+        if self.entity.fighter.stam < 2:
+            self.engine.message_log.add_message(
+                self.entity.name.capitalize() + " dives out of the way but fails", color.white
+            )
 
+        else:   
+            dest_x, dest_y = self.dest_xy
+            self.entity.fighter.is_invul = not self.entity.fighter.is_invul
+            if not self.engine.game_map.in_bounds(dest_x, dest_y):
+                # Destination is out of bounds.
+                raise exceptions.Impossible("That way is blocked by the world map.")
+            if not self.engine.game_map.tiles["walkable"][dest_x, dest_y]:
+                # Destination is blocked by a tile.
+                raise exceptions.Impossible("That way is blocked by a wall.")
+            if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+                # Destination is blocked by an entity.
+                dest_x += self.dx
+                dest_y += self.dy
+                self.dx *= 2
+                self.dy *= 2
+                if self.engine.game_map.in_bounds(dest_x, dest_y) and self.engine.game_map.tiles["walkable"][dest_x, dest_y] and not self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
+                    print(str(self.engine.game_map.in_bounds(dest_x, dest_y))+str(self.engine.game_map.tiles["walkable"][dest_x, dest_y])+str(not self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)))
+                else:
+                    print(str(self.engine.game_map.in_bounds(dest_x, dest_y))+str(self.engine.game_map.tiles["walkable"][dest_x, dest_y])+str(not self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y)))
+                    raise exceptions.Impossible("That way is blocked by a character.")
+            self.engine.message_log.add_message(
+                self.entity.name.capitalize() + " dodges!", color.white
+            )
+            self.entity.move(self.dx, self.dy)
+            self.entity.fighter.take_stam(2)
+
+
+class MovementAction(ActionWithDirection):
     def perform(self) -> None:
         dest_x, dest_y = self.dest_xy
 

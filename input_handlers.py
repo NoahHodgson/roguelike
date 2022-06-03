@@ -214,17 +214,32 @@ class LevelUpEventHandler(AskUserEventHandler):
         console.print(
             x=x + 1,
             y=4,
-            string=f"a) Constitution (+20 HP, from {self.engine.player.fighter.max_hp})",
+            string=f"a) Gusto (+1, from {self.engine.player.fighter.gusto})",
         )
         console.print(
             x=x + 1,
             y=5,
-            string=f"b) Strength (+1 attack, from {self.engine.player.fighter.power})",
+            string=f"b) Strength (+1, from {self.engine.player.fighter.stren})",
         )
         console.print(
             x=x + 1,
             y=6,
-            string=f"c) Agility (+1 defense, from {self.engine.player.fighter.defense})",
+            string=f"c) Dexterity (+1, from {self.engine.player.fighter.dex})",
+        )
+        console.print(
+            x=x + 1,
+            y=7,
+            string=f"c) Knowledge (+1, from {self.engine.player.fighter.know})",
+        )
+        console.print(
+            x=x + 1,
+            y=8,
+            string=f"c) Faith (+1, from {self.engine.player.fighter.fth})",
+        )
+        console.print(
+            x=x + 1,
+            y=9,
+            string=f"c) Luck (+1, from {self.engine.player.fighter.luck})",
         )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
@@ -234,11 +249,18 @@ class LevelUpEventHandler(AskUserEventHandler):
 
         if 0 <= index <= 2:
             if index == 0:
-                player.level.increase_max_hp()
+                player.fighter.gusto+1
             elif index == 1:
-                player.level.increase_power()
+                player.fighter.stren+1
+            elif index == 1:
+                player.fighter.dex+1
+            elif index == 1:
+                player.fighter.know+1
+            elif index == 1:
+                player.fighter.fth+1
             else:
-                player.level.increase_defense()
+                player.fighter.luck+1
+            player.level.increase_level()
         else:
             self.engine.message_log.add_message("Invalid entry.", color.invalid)
 

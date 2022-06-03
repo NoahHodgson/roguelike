@@ -11,12 +11,31 @@ if TYPE_CHECKING:
 class Fighter(BaseComponent):
     parent: Actor
     
-    def __init__(self, hp: int, stam:int, base_defense: int, base_power: int, base_cost):        
-        self.max_hp = hp
-        self._hp = hp
-        self.max_stam = stam
-        self._stam = stam
-        self.base_defense = base_defense
+    def __init__(self, hp: int, stam:int, base_defense: int, base_power: int, base_cost):
+        '''
+        Starting with having all states be base 5 and then we'll do different
+        classes at a different time. Max level = 50, Soft-cap 25.
+        '''
+        self.gusto = 5
+        self.stren = 5
+        self.dex = 5
+        self.know = 5
+        self.fth = 5
+        self.luck = 5 
+        '''
+        Factor level stats into stats.
+        '''
+        # FIXME This is so we have a copy of these initial variables
+        self.hp_initial = hp
+        self.stam_initial = stam
+        self.def_initial = base_defense
+        # remove later
+
+        self.max_hp = hp + int(self.gusto*1.8)
+        self._hp = self.max_hp
+        self.max_stam = stam + int(self.stren+self.dex/2*1.8)
+        self._stam = self.max_stam 
+        self.base_defense = base_defense + int(self.stren*.4)
         self.base_power = base_power
         self.stam_cost = base_cost
         self.is_invul = False
@@ -95,6 +114,14 @@ class Fighter(BaseComponent):
     def take_stam_atk(self):
         self.stam = max(self.stam - self.stam_cost, 0)    
 
+    '''
+    Handle resetting stats on level up
+    '''
+    def level_up_handler(self):
+        self.max_hp = self.hp_initial + int(self.gusto*1.8)
+        self.max_stam = self.stam_initial + int(self.stren+self.dex/2*1.8)
+        self.base_defense = self.def_initial + int(self.stren*.4)
+
     @property
     def defense(self) -> int:
         return self.base_defense + self.defense_bonus
@@ -112,7 +139,11 @@ class Fighter(BaseComponent):
 
     @property
     def power_bonus(self) -> int:
+        boost = 0
+        for stat in self.parent.equipment.power_type:
+            boost += stat * (1/self.parent.equipment.power_type)
+            #FIXME add scaling percentages to above later
         if self.parent.equipment:
-            return self.parent.equipment.power_bonus
+            return self.parent.equipment.power_bonus + int(boost)
         else:
-            return 0
+            return boost

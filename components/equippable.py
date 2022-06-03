@@ -16,7 +16,9 @@ class Equippable(BaseComponent):
         self,
         equipment_type: EquipmentType,
         power_bonus: int = 0,
+        power_type: list[str] = [""],
         defense_bonus: int = 0,
+        #FIXME add scaling later
     ):
         self.equipment_type = equipment_type
 
@@ -26,12 +28,12 @@ class Equippable(BaseComponent):
 
 class Dagger(Equippable):
     def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.WEAPON, power_bonus=2)
+        super().__init__(equipment_type=EquipmentType.WEAPON, power_bonus=2, power_type=["dex"])
 
 
 class Sword(Equippable):
     def __init__(self) -> None:
-        super().__init__(equipment_type=EquipmentType.WEAPON, power_bonus=4)
+        super().__init__(equipment_type=EquipmentType.WEAPON, power_bonus=4, power_type=["strength", "dex"])
 
 
 class LeatherArmor(Equippable):
